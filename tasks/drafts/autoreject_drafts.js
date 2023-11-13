@@ -1,7 +1,6 @@
 const Task = require('../task');
 const similarity = require("string-similarity");
 const { Webhook } = require('@hyunsdev/discord-webhook');
-require('dotenv');
 
 const webhookURL = process.env.WEBHOOK_URI_PRIVATE;
 const webhookURLPublic = process.env.WEBHOOK_URI_PUBLIC;

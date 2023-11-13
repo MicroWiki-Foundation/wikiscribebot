@@ -1,10 +1,12 @@
 const { mwn } = require('mwn');
-require('dotenv');
+require('dotenv').config();
+
 const DeduplicateRequests = require('./tasks/drafts/deduplicate_requests');
 const UpdateDraftTemplates = require('./tasks/drafts/update_draft_templates');
 const ReplaceCategory = require('./tasks/categories/replace_category');
 const AutoRejectDrafts = require('./tasks/drafts/autoreject_drafts');
 const fetch = require('node-fetch');
+
 globalThis.fetch = fetch;
 
 (async () => {
