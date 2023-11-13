@@ -18,4 +18,4 @@ RUN apt-get -y install cron
 
 RUN crontab -l | { cat; echo "0 * * * * node /app/bot.js"; } | crontab -
  
-CMD [ "node", "bot.js" ]
+CMD cron
