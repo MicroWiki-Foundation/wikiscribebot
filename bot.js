@@ -26,7 +26,7 @@ globalThis.fetch = fetch;
         }
     });
 
-    let tasks = [
+    const tasks = [
         new DeduplicateRequests(bot),
         new UpdateDraftTemplates(bot),
         new AutoRejectDrafts(bot)
