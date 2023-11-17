@@ -1,6 +1,7 @@
 const Task = require('../task');
 const similarity = require("string-similarity");
 const { Webhook } = require('@hyunsdev/discord-webhook');
+const BrokenDraftCheck = require('./broken_draft_check');
 
 const webhookURL = process.env.WEBHOOK_URI_PRIVATE;
 const webhookURLPublic = process.env.WEBHOOK_URI_PUBLIC;
@@ -104,7 +105,14 @@ class AutoRejectDrafts extends Task
                         }
                     }
 
-                    
+                    const brokenDraftCheck = new BrokenDraftCheck(this.bot);
+
+                    const results = await brokenDraftCheck.run(pageName, pageText);
+
+                    if (results.length) {
+                        await rejectDraft(pageName, `Page contains broken indicators: ${results.join(', ')}`);
+                        continue;
+                    }
 
                     //
                 } catch (e) {
