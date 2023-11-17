@@ -18,4 +18,4 @@ RUN apt-get -y install cron
 
 RUN crontab -l | { cat; echo "0 * * * * node /app/bot.js"; } | crontab -
  
-ENTRYPOINT ["/usr/sbin/crond", "-f"]
+ENTRYPOINT ["crond", "-f"]
