@@ -16,6 +16,6 @@ COPY . .
 RUN apt-get update
 RUN apt-get -y install cron
 
-RUN crontab -l | { cat; echo "0 * * * * node /app/bot.js"; } | crontab -
+RUN crontab -l | { cat; echo "*/15 * * * * node /app/bot.js"; } | crontab -
  
 ENTRYPOINT ["cron", "-f"]
