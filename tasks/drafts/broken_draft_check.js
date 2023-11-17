@@ -12,7 +12,6 @@ class BrokenDraftCheck extends Task
 
         const brokenDraftSmells = [
             '{{Infobox',
-            '[[Category:'
         ];
 
         const results = [];
