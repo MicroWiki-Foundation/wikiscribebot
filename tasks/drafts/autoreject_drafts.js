@@ -21,6 +21,30 @@ class AutoRejectDrafts extends Task
             const regex = /\[\[Draft:(.*)\|(.*)]]/g;
             let match;
 
+            const rejectDraft = async (pageName, reason) => {
+                await this.bot.edit('Draft:' + pageName, (rev) => {
+                    let text = rev.content;
+
+                    text = rev.content.replace('{{Draft submission|', `{{Draft submission|d|${reason}. This action was performed by a bot.`);
+                    
+                    const webhookText = `❌ Draft [${pageName}](https://micronations.wiki/wiki/Draft:${encodeURIComponent(pageName)}) was automatically rejected: ${reason}.`;
+
+                    hookOne.send(webhookText).catch((e) => {
+                        console.log(e);
+                    });
+
+                    hookTwo.send(webhookText).catch((e) => {
+                        console.log(e);
+                    });
+
+                    return {
+                        text: text,
+                        summary: `Autorejecting draft, reason: ${reason}.`,
+                        minor: true
+                    };
+                });
+            };
+
             while ((match = regex.exec(text)) != null) {
                 try {
                     let pageName = match[1].trim();
@@ -44,28 +68,45 @@ class AutoRejectDrafts extends Task
                     const sim = similarity.compareTwoStrings(npgText, page.revisions[0].content.replace(/\s/g, ''));
 
                     if (sim >= 0.85) {
-                        await this.bot.edit('Draft:' + pageName, (rev) => {
-                            let text = rev.content;
-    
-                            text = rev.content.replace('{{Draft submission|', `{{Draft submission|d|Page is too similar to the nation page guide, please remove placeholder content and replace it with your information. This action was performed by a bot, reasoning: Dice similarity to Nation Page Guide (${sim.toFixed(3)}).`);
-                            
-                            const webhookText = `❌ Draft [${pageName}](https://micronations.wiki/wiki/Draft:${encodeURIComponent(pageName)}) was automatically rejected, page is too similar to the nation page guide (sim: ${sim.toFixed(3)}).`;
-
-                            hookOne.send(webhookText).catch((e) => {
-                                console.log(e);
-                            });
-
-                            hookTwo.send(webhookText).catch((e) => {
-                                console.log(e);
-                            });
-
-                            return {
-                                text: text,
-                                summary: `Autorejecting draft, Dice similarity to Nation Page Guide (${sim.toFixed(3)}).`,
-                                minor: true
-                            };
-                        });
+                        await rejectDraft(pageName, `Page is too similar to the nation page guide (similarity: ${sim.toFixed(3)})`);
+                        continue;
                     }
+
+                    if (pageText.length < 450) {
+                        await rejectDraft(pageName, 'Page is shorter than 450 characters');
+                        continue;
+                    }
+
+                    const exampleTexts = [
+                        'Subject of my article',
+                        'Use this guide with common sense and read it thoroughly',
+                        'Republic of Example',
+                        '{region}',
+                        '{Head of state}',
+                        '{Head of government}',
+                        '{Legislature}',
+                        '[[Category:{short name of micronation}]]',
+                        '[[Category:Micronations in {country}]]',
+                        '[[Category:Micronations in {state or other subdivision, if applicable, otherwise do not include this category}]]',
+                        '[[Category:Micronations established in {year}]]'
+                    ];
+
+                    for (const exampleText of exampleTexts) {
+                        let rejected = false;
+                        if (pageText.indexOf(exampleText) !== -1) {
+                            await rejectDraft(pageName, `Page contains placeholder text (${exampleText.substring(0, 20)}...).`);
+                            rejected = true;
+                            break;
+                        }
+
+                        if (rejected) {
+                            continue;
+                        }
+                    }
+
+                    
+
+                    //
                 } catch (e) {
                     console.log(e);
                     console.log('' + match[1]);

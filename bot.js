@@ -27,9 +27,9 @@ globalThis.fetch = fetch;
     });
 
     const tasks = [
-        new DeduplicateRequests(bot),
+        new AutoRejectDrafts(bot),
         new UpdateDraftTemplates(bot),
-        new AutoRejectDrafts(bot)
+        new DeduplicateRequests(bot),
     ];
 
     // todo - create task report for the Wiki?

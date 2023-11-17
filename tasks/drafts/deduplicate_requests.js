@@ -1,4 +1,5 @@
 const Task = require('../task');
+const notifyTask = require('./notify_user');
 
 class DeduplicateRequests extends Task
 {
@@ -7,10 +8,26 @@ class DeduplicateRequests extends Task
             const content = await this.bot.read('Draft:' + page);
 
             if (!content || !content.revisions) {
+                return {
+                    resolved: false,
+                    rejected: false
+                }
+            }
+
+            return {
+                resolved: content.revisions[0].content.indexOf('{{Draft submission|t') >= 0,
+                rejected: content.revisions[0].content.indexOf('{{Draft submission|d') >= 0
+            };
+        };
+
+        const fnIsDraftRequestRejected = async (page) => {
+            const content = await this.bot.read('Draft:' + page);
+
+            if (!content || !content.revisions) {
                 return true;
             }
 
-            return content.revisions[0].content.indexOf('{{Draft submission|t') >= 0 || content.revisions[0].content.indexOf('{{Draft submission|d') >= 0;
+            return content.revisions[0].content.indexOf('{{Draft submission|d') >= 0;
         };
 
         return this.bot.edit('MicroWiki:Draft review', async (rev) => {
@@ -46,7 +63,6 @@ class DeduplicateRequests extends Task
                 previousMatch = match;
             }
 
-
             if (previousMatch) {
                 requests.push(new DraftRequest(previousMatch[1], text.substring(previousMatch["index"])));
             }
@@ -56,13 +72,24 @@ class DeduplicateRequests extends Task
 
             for (let j = 0; j < requests.length; j++) {
                 const rq = requests[j];
+
+                const {resolved, rejected} = await fnIsDraftRequestReviewed(rq.title);
                 
-                if (rq.title.toLowerCase() in requested || await fnIsDraftRequestReviewed(rq.title)) {
+                if (rq.title.toLowerCase() in requested || resolved || rejected) {
                     text = text.replace(rq.text, '');
                     if (!duplicates[rq.title]) {
                         duplicates[rq.title] = 1;
                     } else {
                         duplicates[rq.title]++;
+                    }
+                }
+
+                if (rejected) {
+                    try {
+                        const user = await (new this.bot.page('Draft:' + rq.title).getCreator())
+                        await (new notifyTask(this.bot)).run(user, rq.title, 'Your draft has been rejected automatically by a bot.');
+                    } catch (e) {
+                        console.log('Failed to notify');
                     }
                 }
 

@@ -12,8 +12,6 @@ class UpdateDraftTemplates extends Task
             while ((match = regex.exec(text)) != null) {
                 try {
                     await this.bot.edit('Draft:' + match[1].trim(), (rev) => {
-                        console.log(rev);
-
                         let text = rev.content;
 
                         text = rev.content.replace('{{Draft submission|t', '{{Draft submission');
